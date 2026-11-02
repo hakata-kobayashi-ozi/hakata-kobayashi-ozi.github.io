@@ -82,6 +82,7 @@
     <div class="card">
       <h2>ご予約を受け付けました</h2>
       <p id="doneText"></p>
+      <p id="talkErr" class="err"></p>
       <p class="note">キャンセルは開始30分前までこの画面から、それ以降はLINEのトークでご連絡ください。</p>
     </div>
     <button class="main" id="close">閉じる</button>
@@ -101,9 +102,11 @@
 const LIFF_ID = '2012333764-OveSDkaM';
 const API_URL = 'https://script.google.com/macros/s/AKfycbyGzkfTSnRu0iEfwczK65xtFezPZoxPJe_SXurg5rV-9IotnWwi8qln5l5YNlTgtoCTyQ/exec';
 
-const S = { menu:null, date:null, time:null, menus:[], profile:null };
+const S = { menu:null, date:null, time:null, menus:[], profile:null, support:{} };
 const $ = id => document.getElementById(id);
 const show = (id, on=true) => $(id).classList.toggle('hidden', !on);
+const curMenu = () => S.menus.find(x => x.id === S.menu) || {};
+const mdLabel = key => { const [, m, d] = key.split('-').map(Number); return m + '/' + d; };
 
 async function api(action, data={}) {
   const res = await fetch(API_URL, {
@@ -127,13 +130,24 @@ function buttons(el, items, cls, onClick) {
   });
 }
 
+function menuHtml(m) {
+  let sub = '';
+  if (m.supportOnly) {
+    sub = '<br><span class="note">安心サポート期間中の方'
+      + (S.support.until ? '（' + mdLabel(S.support.until) + 'まで）' : 'のみ') + '</span>';
+  }
+  return `<span class="menu"><span>${m.label}${sub}</span><span class="note">約${m.minutes}分</span></span>`;
+}
+
 async function start() {
   try {
     await liff.init({ liffId: LIFF_ID });
     if (!liff.isLoggedIn()) { liff.login(); return; }
     const d = await api('init');
-    S.menus = d.menus; S.profile = d.profile; S.dates = d.dates;
-    buttons($('menus'), d.menus.map(m => ({ v:m.id, html:`<span class="menu"><span>${m.label}</span><span class="note">約${m.minutes}分</span></span>` })), '', pickMenu);
+    S.profile = d.profile; S.dates = d.dates; S.support = d.support || {};
+    // サポート期間外とわかっている人には、サポート専用メニューを出さない
+    S.menus = d.menus.filter(m => !(m.supportOnly && S.support.knownNo && !S.support.until));
+    buttons($('menus'), S.menus.map(m => ({ v:m.id, html:menuHtml(m) })), '', pickMenu);
     $('menus').style.display = 'grid'; $('menus').style.gap = '8px';
     if (S.profile) { $('pno').value = S.profile.patientNo || ''; $('fname').value = S.profile.fullName || ''; $('tel').value = S.profile.phone || ''; }
     show('loading', false); show('book');
@@ -144,10 +158,16 @@ function fatal(e) { show('loading', false); $('fatal').textContent = e.message; 
 
 function pickMenu(v) {
   S.menu = v; S.date = null; S.time = null;
-  buttons($('dates'), S.dates.map(x => ({ v:x.key, html:x.label })), '', pickDate);
+  const m = curMenu();
+  // サポート専用メニューは期限までの日付だけ出す
+  const dates = (m.supportOnly && S.support.until) ? S.dates.filter(x => x.key <= S.support.until) : S.dates;
+  buttons($('dates'), dates.map(x => ({ v:x.key, html:x.label })), '', pickDate);
   show('dateBox'); show('timeBox', false); show('infoBox', false);
-  // 新規・鍼を選んだら「初めて」に自動チェック（外すことも可）
-  if (v === 'shinki' && !S.profile) { $('first').checked = true; firstChanged(); }
+  // 新規を選んだら「初めて」に自動チェック（外すことも可）
+  if (v === 'shinki' && !S.profile) { $('first').checked = true; }
+  // サポート専用メニューは初めての方は対象外（患者番号が必要）
+  if (m.supportOnly) { $('first').checked = false; }
+  firstChanged();
 }
 
 async function pickDate(v) {
@@ -162,7 +182,7 @@ async function pickDate(v) {
 
 function pickTime(v) {
   S.time = v;
-  const m = S.menus.find(x => x.id === S.menu), dt = S.dates.find(x => x.key === S.date);
+  const m = curMenu(), dt = S.dates.find(x => x.key === S.date);
   $('summary').innerHTML = `<b>${dt.label} ${v}</b> 来院<br>${m.label}（約${m.minutes}分）`;
   $('bookErr').textContent = ''; show('infoBox');
   $('infoBox').scrollIntoView({ behavior:'smooth' });
@@ -171,7 +191,9 @@ function pickTime(v) {
 function firstChanged() {
   const f = $('first').checked;
   show('telWrap', f); show('noWrap', !f);
-  $('nameNote').textContent = f ? 'お名前と電話番号を入力してください。' : '患者番号かお名前のどちらかを入力してください。';
+  $('nameNote').textContent = f ? 'お名前と電話番号を入力してください。'
+    : curMenu().supportOnly ? 'このメニューは患者番号の入力が必要です。'
+    : '患者番号かお名前のどちらかを入力してください。';
 }
 $('first').onchange = firstChanged;
 
@@ -184,15 +206,30 @@ $('submit').onclick = async () => {
       patientNo: first ? '' : $('pno').value, fullName:$('fname').value, phone:$('tel').value,
     });
     // 予約内容をトークに残す（通数を消費しない）
-    if (liff.isInClient()) {
-      try { await liff.sendMessages([{ type:'text', text:`【ネット予約】\n${d.text}\nで予約しました。` }]); } catch (_) {}
-    }
-    $('doneText').textContent = d.text; show('book', false); show('done');
+    const talkErr = await postToTalk(`【ネット予約】\n${d.text}\nで予約しました。`);
+    $('doneText').textContent = d.text;
+    $('talkErr').textContent = talkErr ? '※トークへの記録に失敗：' + talkErr : '';
+    show('book', false); show('done');
   } catch (e) {
     $('bookErr').textContent = e.message;
     if (/埋まり/.test(e.message)) pickDate(S.date);
   } finally { btn.disabled = false; }
 };
+
+// トークに投稿。失敗したら理由を返す（空文字＝成功）
+async function postToTalk(text) {
+  if (!liff.isInClient()) return 'LINEアプリの外で開いています';
+  try {
+    if (liff.permission) {
+      const p = await liff.permission.query('chat_message.write');
+      if (p.state !== 'granted') return 'トークへの送信が許可されていません（' + p.state + '）';
+    }
+    await liff.sendMessages([{ type:'text', text }]);
+    return '';
+  } catch (e) {
+    return (e.code ? e.code + ' ' : '') + (e.message || String(e));
+  }
+}
 
 $('close').onclick = () => liff.isInClient() ? liff.closeWindow() : location.reload();
 
@@ -213,7 +250,8 @@ async function loadMine() {
           x.disabled = true;
           try {
             const r = await api('cancel', { id:b.id });
-            if (liff.isInClient()) { try { await liff.sendMessages([{ type:'text', text:`【キャンセル】\n${r.text}\nを取り消しました。` }]); } catch (_) {} }
+            const err = await postToTalk(`【キャンセル】\n${r.text}\nを取り消しました。`);
+            if (err) alert('取り消しました。（トークへの記録に失敗：' + err + '）');
             loadMine();
           } catch (e) { alert(e.message); x.disabled = false; }
         };
