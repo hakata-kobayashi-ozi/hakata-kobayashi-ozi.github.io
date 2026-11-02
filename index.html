@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ご予約｜はかた小林鍼灸・整骨院</title>
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  :root { --main:#06c755; --text:#222; --sub:#666; --line:#ddd; --bg:#f6f7f8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif; color:var(--text); background:var(--bg); }
+  header { background:#fff; padding:14px 16px; border-bottom:1px solid var(--line); font-weight:bold; }
+  main { padding:16px; max-width:520px; margin:0 auto; }
+  h2 { font-size:16px; margin:20px 0 10px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:10px; }
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .grid.dates { grid-template-columns:repeat(3,1fr); }
+  button.opt { padding:12px 6px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:15px; }
+  button.opt.on { border-color:var(--main); background:#e9f9ef; font-weight:bold; }
+  button.main { width:100%; padding:14px; border:0; border-radius:10px; background:var(--main); color:#fff; font-size:16px; font-weight:bold; margin-top:12px; }
+  button.main:disabled { background:#bbb; }
+  button.sub { width:100%; padding:12px; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:15px; margin-top:8px; }
+  label { display:block; font-size:14px; margin:10px 0 4px; }
+  input[type=text], input[type=tel] { width:100%; padding:12px; border:1px solid var(--line); border-radius:8px; font-size:16px; }
+  .note { font-size:13px; color:var(--sub); }
+  .err { color:#d33; font-size:14px; margin-top:8px; }
+  .menu { display:flex; justify-content:space-between; align-items:center; width:100%; text-align:left; }
+  .hidden { display:none; }
+  .booking { display:flex; justify-content:space-between; align-items:center; }
+  .booking button { padding:8px 12px; border:1px solid #d33; color:#d33; background:#fff; border-radius:8px; }
+</style>
+</head>
+<body>
+<header>はかた小林鍼灸・整骨院　ネット予約</header>
+<main>
+  <div id="loading" class="card">読み込み中…</div>
+  <div id="fatal" class="card err hidden"></div>
+
+  <!-- 予約する -->
+  <section id="book" class="hidden">
+    <h2>1. メニュー</h2>
+    <div id="menus"></div>
+    <p class="note">大先生の施術はLINEのトークでご相談ください。</p>
+
+    <div id="dateBox" class="hidden">
+      <h2>2. 日付</h2>
+      <div id="dates" class="grid dates"></div>
+    </div>
+
+    <div id="timeBox" class="hidden">
+      <h2>3. 来院時刻</h2>
+      <div id="times" class="grid"></div>
+      <p id="noTime" class="note hidden">この日は空きがありません。別の日をお選びください。</p>
+    </div>
+
+    <div id="infoBox" class="hidden">
+      <h2>4. お客様情報</h2>
+      <div class="card">
+        <label><input type="checkbox" id="first"> 当院は初めてです</label>
+        <div id="noWrap">
+          <label for="pno">患者番号（わかる方）</label>
+          <input type="text" id="pno" inputmode="numeric">
+        </div>
+        <label for="fname">お名前（フルネーム）</label>
+        <input type="text" id="fname" placeholder="例：博多 太郎">
+        <p class="note" id="nameNote">患者番号かお名前のどちらかを入力してください。</p>
+        <div id="telWrap" class="hidden">
+          <label for="tel">電話番号</label>
+          <input type="tel" id="tel" placeholder="例：090-1234-5678">
+        </div>
+      </div>
+      <div class="card" id="summary"></div>
+      <button class="main" id="submit">この内容で予約する</button>
+      <p id="bookErr" class="err"></p>
+    </div>
+
+    <button class="sub" id="toMine">予約の確認・キャンセル</button>
+  </section>
+
+  <!-- 完了 -->
+  <section id="done" class="hidden">
+    <div class="card">
+      <h2>ご予約を受け付けました</h2>
+      <p id="doneText"></p>
+      <p class="note">キャンセルは開始30分前までこの画面から、それ以降はLINEのトークでご連絡ください。</p>
+    </div>
+    <button class="main" id="close">閉じる</button>
+  </section>
+
+  <!-- 自分の予約 -->
+  <section id="mine" class="hidden">
+    <h2>ご予約の確認</h2>
+    <div id="myList"></div>
+    <p class="note">開始30分前を過ぎた予約の取消はLINEのトークでご連絡ください。</p>
+    <button class="sub" id="toBook">予約画面に戻る</button>
+  </section>
+</main>
+
+<script>
+// ===== 設定（公開後に書き換える） =====
+const LIFF_ID = '2012333764-OveSDkaM';
+const API_URL = 'ここにApps ScriptのウェブアプリURLを貼る';
+
+const S = { menu:null, date:null, time:null, menus:[], profile:null };
+const $ = id => document.getElementById(id);
+const show = (id, on=true) => $(id).classList.toggle('hidden', !on);
+
+async function api(action, data={}) {
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{ 'Content-Type':'text/plain;charset=utf-8' }, // GASで余計な事前確認を出さないため
+    body: JSON.stringify(Object.assign({ action, token: liff.getAccessToken() }, data)),
+  });
+  const j = await res.json();
+  if (!j.ok) throw new Error(j.error || 'エラーが発生しました');
+  return j;
+}
+
+function buttons(el, items, cls, onClick) {
+  el.innerHTML = '';
+  items.forEach(it => {
+    const b = document.createElement('button');
+    b.className = 'opt ' + (cls||'');
+    b.innerHTML = it.html; b.dataset.v = it.v;
+    b.onclick = () => { [...el.children].forEach(c => c.classList.remove('on')); b.classList.add('on'); onClick(it.v); };
+    el.appendChild(b);
+  });
+}
+
+async function start() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) { liff.login(); return; }
+    const d = await api('init');
+    S.menus = d.menus; S.profile = d.profile; S.dates = d.dates;
+    buttons($('menus'), d.menus.map(m => ({ v:m.id, html:`<span class="menu"><span>${m.label}</span><span class="note">約${m.minutes}分</span></span>` })), '', pickMenu);
+    $('menus').style.display = 'grid'; $('menus').style.gap = '8px';
+    if (S.profile) { $('pno').value = S.profile.patientNo || ''; $('fname').value = S.profile.fullName || ''; $('tel').value = S.profile.phone || ''; }
+    show('loading', false); show('book');
+  } catch (e) { fatal(e); }
+}
+
+function fatal(e) { show('loading', false); $('fatal').textContent = e.message; show('fatal'); }
+
+function pickMenu(v) {
+  S.menu = v; S.date = null; S.time = null;
+  buttons($('dates'), S.dates.map(x => ({ v:x.key, html:x.label })), '', pickDate);
+  show('dateBox'); show('timeBox', false); show('infoBox', false);
+  // 新規・鍼を選んだら「初めて」に自動チェック（外すことも可）
+  if (v === 'shinki' && !S.profile) { $('first').checked = true; firstChanged(); }
+}
+
+async function pickDate(v) {
+  S.date = v; S.time = null; show('infoBox', false);
+  $('times').innerHTML = '<span class="note">空きを確認中…</span>'; show('timeBox'); show('noTime', false);
+  try {
+    const d = await api('slots', { menu:S.menu, date:v });
+    buttons($('times'), d.times.map(t => ({ v:t, html:t })), '', pickTime);
+    show('noTime', d.times.length === 0);
+  } catch (e) { $('times').innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+function pickTime(v) {
+  S.time = v;
+  const m = S.menus.find(x => x.id === S.menu), dt = S.dates.find(x => x.key === S.date);
+  $('summary').innerHTML = `<b>${dt.label} ${v}</b> 来院<br>${m.label}（約${m.minutes}分）`;
+  $('bookErr').textContent = ''; show('infoBox');
+  $('infoBox').scrollIntoView({ behavior:'smooth' });
+}
+
+function firstChanged() {
+  const f = $('first').checked;
+  show('telWrap', f); show('noWrap', !f);
+  $('nameNote').textContent = f ? 'お名前と電話番号を入力してください。' : '患者番号かお名前のどちらかを入力してください。';
+}
+$('first').onchange = firstChanged;
+
+$('submit').onclick = async () => {
+  const btn = $('submit'); btn.disabled = true; $('bookErr').textContent = '';
+  try {
+    const first = $('first').checked;
+    const d = await api('book', {
+      menu:S.menu, date:S.date, time:S.time, firstVisit:first,
+      patientNo: first ? '' : $('pno').value, fullName:$('fname').value, phone:$('tel').value,
+    });
+    // 予約内容をトークに残す（通数を消費しない）
+    if (liff.isInClient()) {
+      try { await liff.sendMessages([{ type:'text', text:`【ネット予約】\n${d.text}\nで予約しました。` }]); } catch (_) {}
+    }
+    $('doneText').textContent = d.text; show('book', false); show('done');
+  } catch (e) {
+    $('bookErr').textContent = e.message;
+    if (/埋まり/.test(e.message)) pickDate(S.date);
+  } finally { btn.disabled = false; }
+};
+
+$('close').onclick = () => liff.isInClient() ? liff.closeWindow() : location.reload();
+
+async function loadMine() {
+  show('book', false); show('done', false); show('mine');
+  $('myList').innerHTML = '<div class="card note">読み込み中…</div>';
+  try {
+    const d = await api('mine');
+    if (!d.bookings.length) { $('myList').innerHTML = '<div class="card note">現在のご予約はありません。</div>'; return; }
+    $('myList').innerHTML = '';
+    d.bookings.forEach(b => {
+      const c = document.createElement('div'); c.className = 'card booking';
+      c.innerHTML = `<span>${b.text}</span>`;
+      if (b.cancellable) {
+        const x = document.createElement('button'); x.textContent = '取消';
+        x.onclick = async () => {
+          if (!confirm(b.text + '\nを取り消しますか？')) return;
+          x.disabled = true;
+          try {
+            const r = await api('cancel', { id:b.id });
+            if (liff.isInClient()) { try { await liff.sendMessages([{ type:'text', text:`【キャンセル】\n${r.text}\nを取り消しました。` }]); } catch (_) {} }
+            loadMine();
+          } catch (e) { alert(e.message); x.disabled = false; }
+        };
+        c.appendChild(x);
+      }
+      $('myList').appendChild(c);
+    });
+  } catch (e) { $('myList').innerHTML = `<div class="card err">${e.message}</div>`; }
+}
+$('toMine').onclick = loadMine;
+$('toBook').onclick = () => { show('mine', false); show('book'); };
+
+start();
+</script>
+</body>
+</html>
