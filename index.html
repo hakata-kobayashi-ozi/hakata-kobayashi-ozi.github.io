@@ -192,7 +192,7 @@ function firstChanged() {
   const f = $('first').checked;
   show('telWrap', f); show('noWrap', !f);
   $('nameNote').textContent = f ? 'お名前と電話番号を入力してください。'
-    : curMenu().supportOnly ? 'このメニューは患者番号の入力が必要です。'
+    : curMenu().supportOnly ? 'このメニューは患者番号の入力が必要です。患者番号は診察券に記載しています。'
     : '患者番号かお名前のどちらかを入力してください。';
 }
 $('first').onchange = firstChanged;
@@ -201,6 +201,10 @@ $('submit').onclick = async () => {
   const btn = $('submit'); btn.disabled = true; $('bookErr').textContent = '';
   try {
     const first = $('first').checked;
+    // サポート専用メニューで患者番号が空なら、送信前に案内する
+    if (curMenu().supportOnly && !first && !$('pno').value.trim()) {
+      throw new Error('患者番号は診察券に記載しています。ご確認のうえご入力ください。わからない場合はLINEのトークでご相談ください。');
+    }
     const d = await api('book', {
       menu:S.menu, date:S.date, time:S.time, firstVisit:first,
       patientNo: first ? '' : $('pno').value, fullName:$('fname').value, phone:$('tel').value,
