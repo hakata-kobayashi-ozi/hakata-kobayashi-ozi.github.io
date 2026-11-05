@@ -28,6 +28,14 @@
   .hidden { display:none; }
   .booking { display:flex; justify-content:space-between; align-items:center; }
   .booking button { padding:8px 12px; border:1px solid #d33; color:#d33; background:#fff; border-radius:8px; }
+  /* クイックケアを受けられなかったときの案内 */
+  #pop { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:16px; z-index:10; }
+  #pop.hidden { display:none; }
+  #pop .box { background:#fff; border-radius:12px; padding:18px 16px; max-width:420px; width:100%; }
+  #pop h3 { margin:0 0 8px; font-size:16px; }
+  #pop p { margin:0 0 12px; font-size:14px; line-height:1.6; }
+  #popMenus { display:grid; gap:8px; }
+  #popMenus button { padding:12px; border:1px solid var(--main); border-radius:8px; background:#e9f9ef; font-size:15px; text-align:left; }
 </style>
 </head>
 <body>
@@ -97,6 +105,16 @@
   </section>
 </main>
 
+<!-- クイックケアを受けられなかったときの案内 -->
+<div id="pop" class="hidden">
+  <div class="box">
+    <h3 id="popTitle"></h3>
+    <p id="popText"></p>
+    <div id="popMenus"></div>
+    <button class="sub" id="popClose">閉じる</button>
+  </div>
+</div>
+
 <script>
 // ===== 設定（公開後に書き換える） =====
 const LIFF_ID = '2012333764-OveSDkaM';
@@ -106,6 +124,7 @@ const S = { menu:null, date:null, time:null, menus:[], profile:null, support:{} 
 const $ = id => document.getElementById(id);
 const show = (id, on=true) => $(id).classList.toggle('hidden', !on);
 const curMenu = () => S.menus.find(x => x.id === S.menu) || {};
+const dur = m => m.display || ('約' + m.minutes + '分'); // 画面に出す時間
 const mdLabel = key => { const [, m, d] = key.split('-').map(Number); return m + '/' + d; };
 
 async function api(action, data={}) {
@@ -133,10 +152,11 @@ function buttons(el, items, cls, onClick) {
 function menuHtml(m) {
   let sub = '';
   if (m.supportOnly) {
-    sub = '<br><span class="note">安心サポート期間中の方'
-      + (S.support.until ? '（' + mdLabel(S.support.until) + 'まで）' : 'のみ') + '</span>';
+    sub = '<br><span class="note">'
+      + (S.support.until ? '安心サポート期間中（' + mdLabel(S.support.until) + 'まで）'
+        : '安心サポート期間中の方のみ（通常メニューの施術日から1ヶ月）') + '</span>';
   }
-  return `<span class="menu"><span>${m.label}${sub}</span><span class="note">約${m.minutes}分</span></span>`;
+  return `<span class="menu"><span>${m.label}${sub}</span><span class="note">${dur(m)}</span></span>`;
 }
 
 async function start() {
@@ -183,7 +203,7 @@ async function pickDate(v) {
 function pickTime(v) {
   S.time = v;
   const m = curMenu(), dt = S.dates.find(x => x.key === S.date);
-  $('summary').innerHTML = `<b>${dt.label} ${v}</b> 来院<br>${m.label}（約${m.minutes}分）`;
+  $('summary').innerHTML = `<b>${dt.label} ${v}</b> 来院<br>${m.label}（${dur(m)}）`;
   $('bookErr').textContent = ''; show('infoBox');
   $('infoBox').scrollIntoView({ behavior:'smooth' });
 }
@@ -215,10 +235,54 @@ $('submit').onclick = async () => {
     $('talkErr').textContent = talkErr ? '※トークへの記録に失敗：' + talkErr : '';
     show('book', false); show('done');
   } catch (e) {
+    if (/安心サポート期間中の方のみ/.test(e.message) && !/患者番号を入力/.test(e.message)) { supportPop(e.message); return; }
     $('bookErr').textContent = e.message;
     if (/埋まり/.test(e.message)) pickDate(S.date);
   } finally { btn.disabled = false; }
 };
+
+// クイックケア（サポート料金）を受けられなかったとき：理由と代わりのメニューを出す
+const ALT_MENUS = ['hokenLong', 'okibari', 'standard', 'honkaku'];
+function supportPop(msg) {
+  const until = (msg.match(/サポート期間は(.+?)まで/) || [])[1];
+  let title, text;
+  if ($('first').checked) {
+    title = '初めての方はサポート料金の対象外です';
+    text = 'サポート料金は、当院で施術を受けた方向けの料金です。お手数ですが「新規」をお選びください。';
+  } else if (until) {
+    title = '選んだ日が安心サポート期間を超えたので、サポート料金ではご予約いただけません';
+    text = 'サポート期間は' + until + 'までです。' + until + 'までの日付を選び直すか、クイックケア（通常料金）など下のメニューからお選びください。';
+  } else {
+    title = '安心サポート期間を超えたので、サポート料金ではご予約いただけません';
+    text = 'お手数ですが、クイックケア（通常料金）など下のメニューからお選びください。'
+      + '（本日ご来院の分は、翌日から反映されます）';
+  }
+  $('popTitle').textContent = title;
+  $('popText').textContent = text;
+  const ids = $('first').checked ? ['shinki'] : ALT_MENUS;
+  const alts = ids.map(id => S.menus.find(m => m.id === id)).filter(Boolean); // 受付停止中のメニューは出さない
+  $('popMenus').innerHTML = '';
+  alts.forEach(m => {
+    const b = document.createElement('button');
+    b.innerHTML = `${m.label}<span class="note">（${dur(m)}）</span>`;
+    b.onclick = () => { show('pop', false); switchMenu(m.id); };
+    $('popMenus').appendChild(b);
+  });
+  show('pop');
+}
+
+// 同じ日付のまま、別のメニューに切り替えて空き時間を出し直す
+function switchMenu(id) {
+  const keepDate = S.date;
+  [...$('menus').children].forEach(c => c.classList.toggle('on', c.dataset.v === id));
+  pickMenu(id);
+  if (keepDate && S.dates.some(x => x.key === keepDate)) {
+    [...$('dates').children].forEach(c => c.classList.toggle('on', c.dataset.v === keepDate));
+    pickDate(keepDate);
+  }
+  $('timeBox').scrollIntoView({ behavior:'smooth' });
+}
+$('popClose').onclick = () => show('pop', false);
 
 // トークに投稿。失敗したら理由を返す（空文字＝成功）
 async function postToTalk(text) {
