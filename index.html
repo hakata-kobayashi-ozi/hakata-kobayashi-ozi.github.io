@@ -221,9 +221,10 @@ $('submit').onclick = async () => {
   const btn = $('submit'); btn.disabled = true; $('bookErr').textContent = '';
   try {
     const first = $('first').checked;
-    // サポート専用メニューで患者番号が空なら、送信前に案内する
+    // サポート専用メニューで患者番号が空なら、送信前に案内する（期間外ではなく「確認できない」）
     if (curMenu().supportOnly && !first && !$('pno').value.trim()) {
-      throw new Error('患者番号は診察券に記載しています。ご確認のうえご入力ください。わからない場合はLINEのトークでご相談ください。');
+      supportPop('安心サポート期間中の方のみ。患者番号が未入力のため、サポート期間を確認できません');
+      return;
     }
     const d = await api('book', {
       menu:S.menu, date:S.date, time:S.time, firstVisit:first,
@@ -235,7 +236,7 @@ $('submit').onclick = async () => {
     $('talkErr').textContent = talkErr ? '※トークへの記録に失敗：' + talkErr : '';
     show('book', false); show('done');
   } catch (e) {
-    if (/安心サポート期間中の方のみ/.test(e.message) && !/患者番号を入力/.test(e.message)) { supportPop(e.message); return; }
+    if (/安心サポート期間中の方のみ/.test(e.message)) { supportPop(e.message); return; }
     $('bookErr').textContent = e.message;
     if (/埋まり/.test(e.message)) pickDate(S.date);
   } finally { btn.disabled = false; }
@@ -245,8 +246,18 @@ $('submit').onclick = async () => {
 const ALT_MENUS = ['hokenLong', 'okibari', 'standard', 'honkaku'];
 function supportPop(msg) {
   const until = (msg.match(/サポート期間は(.+?)まで/) || [])[1];
-  let title, text;
-  if ($('first').checked) {
+  let title, text, askNo = false;
+  if (/未入力|患者番号を入力/.test(msg)) {
+    title = '患者番号が未入力のため、サポート期間を確認できません';
+    text = '診察券に記載の患者番号を入力すると、サポート料金でご予約いただけるか確認できます。'
+      + 'わからない場合は、クイックケア（通常料金）など下のメニューからお選びいただくか、LINEのトークでご相談ください。';
+    askNo = true;
+  } else if (/確認できません/.test(msg)) {
+    title = 'この患者番号ではサポート期間を確認できません';
+    text = '診察券の患者番号をもう一度ご確認ください。初めてご来院された日の分は、翌日から確認できるようになります。'
+      + 'ご不明な場合は、クイックケア（通常料金）など下のメニューからお選びいただくか、LINEのトークでご相談ください。';
+    askNo = true;
+  } else if ($('first').checked) {
     title = '初めての方はサポート料金の対象外です';
     text = 'サポート料金は、当院で施術を受けた方向けの料金です。お手数ですが「新規」をお選びください。';
   } else if (until) {
@@ -262,6 +273,12 @@ function supportPop(msg) {
   const ids = $('first').checked ? ['shinki'] : ALT_MENUS;
   const alts = ids.map(id => S.menus.find(m => m.id === id)).filter(Boolean); // 受付停止中のメニューは出さない
   $('popMenus').innerHTML = '';
+  if (askNo) { // 番号を入れ直すボタン
+    const b = document.createElement('button');
+    b.textContent = '患者番号を入力する';
+    b.onclick = () => { show('pop', false); $('pno').focus(); $('pno').scrollIntoView({ behavior:'smooth', block:'center' }); };
+    $('popMenus').appendChild(b);
+  }
   alts.forEach(m => {
     const b = document.createElement('button');
     b.innerHTML = `${m.label}<span class="note">（${dur(m)}）</span>`;
