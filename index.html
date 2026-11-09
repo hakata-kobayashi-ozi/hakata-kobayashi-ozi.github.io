@@ -36,6 +36,11 @@
   #pop p { margin:0 0 12px; font-size:14px; line-height:1.6; }
   #popMenus { display:grid; gap:8px; }
   #popMenus button { padding:12px; border:1px solid var(--main); border-radius:8px; background:#e9f9ef; font-size:15px; text-align:left; }
+  /* 安心サポート期間のお知らせ（画面のいちばん上） */
+  #supportInfo { border-radius:10px; padding:12px 14px; margin-bottom:10px; font-size:14px; line-height:1.6; }
+  #supportInfo.on { background:#e9f9ef; border:1px solid var(--main); }
+  #supportInfo.off { background:#fff; border:1px solid var(--line); }
+  #supportInfo b { font-size:16px; }
 </style>
 </head>
 <body>
@@ -46,6 +51,7 @@
 
   <!-- 予約する -->
   <section id="book" class="hidden">
+    <div id="supportInfo" class="hidden"></div>
     <h2>1. メニュー</h2>
     <div id="menus"></div>
     <p class="note">大先生の施術はLINEのトークでご相談ください。</p>
@@ -149,9 +155,12 @@ function buttons(el, items, cls, onClick) {
   });
 }
 
+const SUPPORT_TWIN = 'hokenLong'; // サポート料金と同じクイックケアの通常料金
 function menuHtml(m) {
   let sub = '';
-  if (m.supportOnly) {
+  if (m.id === SUPPORT_TWIN && S.support.until) {
+    sub = '<br><span class="note">' + mdLabel(S.support.until) + 'より後のご予約はこちら</span>';
+  } else if (m.supportOnly) {
     sub = '<br><span class="note">'
       + (S.support.until ? '安心サポート期間中（' + mdLabel(S.support.until) + 'まで）'
         : '安心サポート期間中の方のみ（通常メニューの施術日から1ヶ月）') + '</span>';
@@ -167,11 +176,36 @@ async function start() {
     S.profile = d.profile; S.dates = d.dates; S.support = d.support || {};
     // サポート期間外とわかっている人には、サポート専用メニューを出さない
     S.menus = d.menus.filter(m => !(m.supportOnly && S.support.knownNo && !S.support.until));
+    // サポート期間中の人には、クイックケア（通常料金）は期限より後の日付だけ出す（後に予約できる日がなければメニューごと出さない）
+    if (S.support.until && !S.dates.some(x => x.key > S.support.until)) S.menus = S.menus.filter(m => m.id !== SUPPORT_TWIN);
+    // サポート期間中の人には、サポート料金を通常料金より上に出す
+    if (S.support.until) {
+      const q = S.menus.find(m => m.supportOnly), i = S.menus.findIndex(m => m.id === SUPPORT_TWIN);
+      if (q && i >= 0) { S.menus = S.menus.filter(m => m !== q); S.menus.splice(i, 0, q); }
+    }
     buttons($('menus'), S.menus.map(m => ({ v:m.id, html:menuHtml(m) })), '', pickMenu);
     $('menus').style.display = 'grid'; $('menus').style.gap = '8px';
     if (S.profile) { $('pno').value = S.profile.patientNo || ''; $('fname').value = S.profile.fullName || ''; $('tel').value = S.profile.phone || ''; }
+    showSupportInfo();
     show('loading', false); show('book');
   } catch (e) { fatal(e); }
+}
+
+// LINEと患者番号が紐づいている人には、最初に安心サポートの期限を出す
+function showSupportInfo() {
+  const box = $('supportInfo');
+  if (!S.support.knownNo) { show('supportInfo', false); return; } // 番号がわからない人には出さない
+  if (S.support.until) {
+    const d = S.dates.find(x => x.key === S.support.until);
+    box.className = 'on';
+    box.innerHTML = '安心サポート期間中です<br><b>' + (d ? d.label : mdLabel(S.support.until)) + 'まで</b>'
+      + '<br><span class="note">この日までは、クイックケア（サポート料金）などサポート料金でご予約いただけます。'
+      + 'クイックケア（通常料金）は、この日より後のご予約用です。</span>';
+  } else {
+    box.className = 'off';
+    box.innerHTML = '安心サポート期間は終了しています'
+      + '<br><span class="note">通常メニューを受けた日から1ヶ月間、またサポート料金でご予約いただけます。（ご来院の分は翌日から反映されます）</span>';
+  }
 }
 
 function fatal(e) { show('loading', false); $('fatal').textContent = e.message; show('fatal'); }
@@ -179,8 +213,11 @@ function fatal(e) { show('loading', false); $('fatal').textContent = e.message; 
 function pickMenu(v) {
   S.menu = v; S.date = null; S.time = null;
   const m = curMenu();
-  // サポート専用メニューは期限までの日付だけ出す
-  const dates = (m.supportOnly && S.support.until) ? S.dates.filter(x => x.key <= S.support.until) : S.dates;
+  // サポート専用メニューは期限までの日付だけ、サポート期間中の人の通常料金は期限より後の日付だけ出す
+  const u = S.support.until;
+  const dates = (m.supportOnly && u) ? S.dates.filter(x => x.key <= u)
+    : (m.id === SUPPORT_TWIN && u) ? S.dates.filter(x => x.key > u)
+    : S.dates;
   buttons($('dates'), dates.map(x => ({ v:x.key, html:x.label })), '', pickDate);
   show('dateBox'); show('timeBox', false); show('infoBox', false);
   // 新規を選んだら「初めて」に自動チェック（外すことも可）
