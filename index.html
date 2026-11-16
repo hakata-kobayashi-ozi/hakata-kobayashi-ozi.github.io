@@ -280,12 +280,41 @@ function firstChanged() {
     : curMenu().supportOnly ? 'このメニューは患者番号の入力が必要です。患者番号は診察券に記載しています。'
     : '患者番号かお名前のどちらかを入力してください。';
 }
-$('first').onchange = firstChanged;
+// 「当院は初めてです」にチェックしたのに新規以外のメニューなら、新規になることを案内する（2026-11-16）
+$('first').onchange = () => {
+  firstChanged();
+  if ($('first').checked && S.menu && S.menu !== 'shinki') firstPop();
+};
+
+function firstPop() {
+  const shinki = S.menus.find(m => m.id === 'shinki');
+  $('popTitle').textContent = '初めての方は「新規」メニューになります';
+  $('popText').textContent = shinki
+    ? '初めてご来院の方は「新規」（' + dur(shinki) + '）でのご予約になります。お手数ですが、新規で時間を選び直してください。'
+    : '初めてご来院の方のご予約は、LINEのトークでご相談ください。';
+  $('popMenus').innerHTML = '';
+  if (shinki) {
+    const b = document.createElement('button');
+    b.innerHTML = '新規で予約する<span class="note">（' + dur(shinki) + '）</span>';
+    b.onclick = () => {
+      show('pop', false); switchMenu('shinki');
+      $('first').checked = true; firstChanged();
+    };
+    $('popMenus').appendChild(b);
+  }
+  const no = document.createElement('button');
+  no.textContent = '初めてではない（チェックを外す）';
+  no.onclick = () => { show('pop', false); $('first').checked = false; firstChanged(); };
+  $('popMenus').appendChild(no);
+  show('pop');
+}
 
 $('submit').onclick = async () => {
   const btn = $('submit'); btn.disabled = true; $('bookErr').textContent = '';
   try {
     const first = $('first').checked;
+    // 初めての方は新規だけ
+    if (first && S.menu !== 'shinki') { firstPop(); return; }
     // サポート専用メニューで患者番号が空なら、送信前に案内する（期間外ではなく「確認できない」）
     if (curMenu().supportOnly && !first && !$('pno').value.trim()) {
       supportPop('安心サポート期間中の方のみ。患者番号が未入力のため、サポート期間を確認できません');
