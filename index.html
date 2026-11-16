@@ -133,15 +133,39 @@ const curMenu = () => S.menus.find(x => x.id === S.menu) || {};
 const dur = m => m.display || ('約' + m.minutes + '分'); // 画面に出す時間
 const mdLabel = key => { const [, m, d] = key.split('-').map(Number); return m + '/' + d; };
 
+// サーバー（Apps Script）とのやりとり
+//   Googleがときどき予約データの代わりにエラー画面を返すので、そのときは少し待って1回だけやり直す（2026-11-16）
+//   予約(book)・取消(cancel)は二重に入るのを防ぐため、やり直さない
 async function api(action, data={}) {
-  const res = await fetch(API_URL, {
-    method:'POST',
-    headers:{ 'Content-Type':'text/plain;charset=utf-8' }, // GASで余計な事前確認を出さないため
-    body: JSON.stringify(Object.assign({ action, token: liff.getAccessToken() }, data)),
-  });
-  const j = await res.json();
-  if (!j.ok) throw new Error(j.error || 'エラーが発生しました');
-  return j;
+  const body = JSON.stringify(Object.assign({ action, token: liff.getAccessToken() }, data));
+  const tries = (action === 'book' || action === 'cancel') ? 1 : 2;
+  let last;
+  for (let i = 0; i < tries; i++) {
+    if (i) await new Promise(r => setTimeout(r, 1500));
+    let res, text;
+    try {
+      res = await fetch(API_URL, {
+        method:'POST',
+        headers:{ 'Content-Type':'text/plain;charset=utf-8' }, // GASで余計な事前確認を出さないため
+        body,
+      });
+      text = await res.text();
+    } catch (e) {
+      last = new Error('通信できませんでした。電波の良いところで開き直してください');
+      continue;
+    }
+    let j;
+    try { j = JSON.parse(text); } catch (e) {
+      const t = (text.match(/<title>([^<]*)<\/title>/i) || [])[1] || text.slice(0, 30);
+      last = new Error('サーバーが混み合っています。少し待ってから開き直してください（HTTP ' + res.status + '・' + t.trim() + '）');
+      continue;
+    }
+    if (!j.ok) throw new Error(j.error || 'エラーが発生しました');
+    return j;
+  }
+  if (action === 'book') last = new Error(last.message + '　※予約が入ったかどうか、下の「予約の確認・キャンセル」でご確認ください');
+  if (action === 'cancel') last = new Error(last.message + '　※取り消せたかどうか、予約の確認画面でご確認ください');
+  throw last;
 }
 
 function buttons(el, items, cls, onClick) {
@@ -170,7 +194,11 @@ function menuHtml(m) {
 
 async function start() {
   try {
-    await liff.init({ liffId: LIFF_ID });
+    try {
+      await liff.init({ liffId: LIFF_ID });
+    } catch (e) {
+      throw new Error('LINEの読み込みに失敗しました。画面を閉じて、LINEから開き直してください（' + (e.code ? e.code + ' ' : '') + (e.message || e) + '）');
+    }
     if (!liff.isLoggedIn()) { liff.login(); return; }
     const d = await api('init');
     S.profile = d.profile; S.dates = d.dates; S.support = d.support || {};
