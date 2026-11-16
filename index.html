@@ -425,20 +425,50 @@ async function loadMine() {
       if (b.cancellable) {
         const x = document.createElement('button'); x.textContent = '取消';
         x.onclick = async () => {
-          if (!confirm(b.text + '\nを取り消しますか？')) return;
+          if (!(await askPop('この予約を取り消しますか？', b.text, '', '取り消す'))) return;
           x.disabled = true;
           try {
             const r = await api('cancel', { id:b.id });
             const err = await postToTalk(`【キャンセル】\n${r.text}\nを取り消しました。`);
-            if (err) alert('取り消しました。（トークへの記録に失敗：' + err + '）');
+            if (err) askPop('取り消しました', r.text, '（トークへの記録に失敗：' + err + '）');
             loadMine();
-          } catch (e) { alert(e.message); x.disabled = false; }
+          } catch (e) { askPop('取り消せませんでした', '', e.message); x.disabled = false; }
         };
         c.appendChild(x);
       }
       $('myList').appendChild(c);
     });
   } catch (e) { $('myList').innerHTML = `<div class="card err">${e.message}</div>`; }
+}
+// 確認・お知らせのポップアップ（confirm/alert だとページのアドレスが出るので使わない。2026-11-16）
+//   big：太字で大きく出す内容（予約の日時など）、okLabel を渡すと「はい」ボタン付き → true/false を返す
+function askPop(title, big, note, okLabel) {
+  return new Promise(resolve => {
+    $('popTitle').textContent = title;
+    const p = $('popText'); p.innerHTML = '';
+    if (big) {
+      const b = document.createElement('b');
+      b.style.cssText = 'display:block; font-size:20px; line-height:1.5; margin:4px 0 8px;';
+      b.textContent = big; p.appendChild(b);
+    }
+    if (note) p.appendChild(document.createTextNode(note));
+    $('popMenus').innerHTML = '';
+    const done = v => {
+      show('pop', false);
+      $('popClose').textContent = '閉じる'; $('popClose').onclick = () => show('pop', false);
+      resolve(v);
+    };
+    if (okLabel) {
+      const ok = document.createElement('button');
+      ok.textContent = okLabel;
+      ok.style.cssText = 'border-color:#d33; color:#d33; background:#fff; font-weight:bold; text-align:center;';
+      ok.onclick = () => done(true);
+      $('popMenus').appendChild(ok);
+    }
+    $('popClose').textContent = okLabel ? 'やめる' : '閉じる';
+    $('popClose').onclick = () => done(false);
+    show('pop');
+  });
 }
 $('toMine').onclick = loadMine;
 $('toBook').onclick = () => { show('mine', false); show('book'); };
