@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>はかた小林鍼灸・整骨院 Web予約 / Online Booking</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap">
 <style>
 /* 1カラムの予約フォーム。上から順に選ぶ。落ち着いた藍緑と和紙っぽい生成りグレー */
 :root {
   --bg:#f3f4f2; --card:#ffffff; --fg:#1f2a2a; --sub:#5d6b6a; --line:#d8dedc;
   --accent:#1f6f6a; --accent-soft:#e3f0ee; --warn-bg:#fff6e0; --warn:#8a5a00; --demo:#3b3f8f; --demo-soft:#ecedfa; --err:#c0392b;
-  --font:"Noto Sans JP","Noto Sans SC","Noto Sans KR",system-ui,sans-serif;
+  --font:"Noto Sans JP","Noto Sans TC","Noto Sans KR",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg:#141a1a; --card:#1d2525; --fg:#e6ecea; --sub:#9fb0ad; --line:#334140;
@@ -173,23 +173,23 @@ const T = {
     donenote:'If no email arrives, please check your spam folder.',
     E_TAKEN:'That time has just been taken. Please choose another time.', E_BUSY:'Please wait a little and try again.', E_NET:'Could not connect. Please try again where the signal is better.',
     date:(m,d,w)=>w+', '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]+' '+d },
-  zh: { lang:'中文', title:'博多小林针灸·整骨院　网上预约', tag:'适用于没有LINE的顾客及海外顾客',
-    line:'第二次以后来院、使用日本健康保险的顾客，请通过 <a id="lineA">LINE</a> 预约。', tr:'本院工作人员只会说日语和英语。院内的交流将使用手机翻译软件，敬请谅解。',
-    s0:'您有日本的健康保险证吗？', yes:'有', no:'没有（海外顾客等）',
-    s1:'选择项目', s2:'选择日期和时间', s3:'姓名和联系方式',
-    insY:'', insN:'没有日本健康保险的顾客适用访客价格。',
-    menus:{ shinki:['初次来院','问诊·检查·治疗'], standard:['标准疗程','自费治疗'], okibari:['揿针（皮内针）','贴上小针后带回'], honkaku:['正式针灸治疗','充分使用针灸的治疗'], visitor60:['访客 60分钟','适用于没有日本健康保险的顾客'], visitor90:['访客 90分钟','适用于没有日本健康保险的顾客'] },
-    min:m=>m+'分钟', range:'可预约明天至一个月后的日期。', pick:'选择日期后会显示可预约的时间。', none:'这一天没有空位，请选择其他日期。', loading:'正在确认空位…',
-    wd:'日一二三四五六', md:(m,d,w)=>m+'/'+d+'（周'+w+'）',
-    name:'姓名', req:'必填', mail:'电子邮箱', tel:'电话（选填）',
-    msg:'症状或要求（选填）', agree:'您填写的信息仅用于联系预约事宜。',
-    next:'确认填写内容', errFill:'请填写姓名和邮箱，并勾选同意。',
-    conf:'按此内容提交预约申请', confnote:'预约尚未确定。院方确认后会通过邮件通知您。', send:'提交预约申请', sending:'正在发送…', back:'返回修改',
-    sMenu:'项目', sDate:'日期时间', sName:'姓名', sMail:'邮箱', sTel:'电话', sIns:'健康保险证', sMsg:'要求',
-    done:'已收到您的预约申请', donebody:'院方确认后会发送确认邮件。收到确认邮件之前，预约尚未确定。',
-    donenote:'如果没有收到邮件，请检查垃圾邮件文件夹。',
-    E_TAKEN:'该时间刚刚被预约，请选择其他时间。', E_BUSY:'请稍后再试。', E_NET:'无法连接，请在信号较好的地方重试。',
-    date:(m,d,w)=>m+'月'+d+'日（周'+w+'）' },
+  zh: { lang:'中文', title:'博多小林針灸·整骨院　線上預約', tag:'適用於沒有LINE的顧客及海外顧客',
+    line:'第二次以後來院、使用日本健康保險的顧客，請透過 <a id="lineA">LINE</a> 預約。', tr:'本院工作人員僅能使用日語和英語溝通。就診期間我們將使用手機翻譯軟體與您交流，敬請見諒。',
+    s0:'您有日本的健康保險證嗎？', yes:'有', no:'沒有（海外顧客等）',
+    s1:'選擇項目', s2:'選擇日期和時間', s3:'姓名和聯絡方式',
+    insY:'', insN:'沒有日本健康保險的顧客適用訪客價格。',
+    menus:{ shinki:['初次來院','問診·檢查·治療'], standard:['標準療程','自費治療'], okibari:['皮內針（撳針）','貼上小針後帶回'], honkaku:['正式針灸治療','充分使用針灸的治療'], visitor60:['訪客 60分鐘','適用於沒有日本健康保險的顧客'], visitor90:['訪客 90分鐘','適用於沒有日本健康保險的顧客'] },
+    min:m=>m+'分鐘', range:'可預約明天至一個月後的日期。', pick:'選擇日期後會顯示可預約的時間。', none:'這一天沒有空位，請選擇其他日期。', loading:'正在確認空位…',
+    wd:'日一二三四五六', md:(m,d,w)=>m+'/'+d+'（週'+w+'）',
+    name:'姓名', req:'必填', mail:'電子郵件', tel:'電話（選填）',
+    msg:'症狀或要求（選填）', agree:'您填寫的資料僅用於聯絡預約事宜。',
+    next:'確認填寫內容', errFill:'請填寫姓名和電子郵件，並勾選同意。',
+    conf:'按此內容提交預約申請', confnote:'預約尚未確定。院方確認後會透過電子郵件通知您。', send:'提交預約申請', sending:'正在送出…', back:'返回修改',
+    sMenu:'項目', sDate:'日期時間', sName:'姓名', sMail:'電子郵件', sTel:'電話', sIns:'健康保險證', sMsg:'要求',
+    done:'已收到您的預約申請', donebody:'院方確認後會寄送確認信。收到確認信之前，預約尚未確定。',
+    donenote:'如果沒有收到信件，請檢查垃圾郵件資料夾。',
+    E_TAKEN:'該時間剛剛被預約，請選擇其他時間。', E_BUSY:'請稍後再試。', E_NET:'無法連線，請在訊號較好的地方重試。',
+    date:(m,d,w)=>m+'月'+d+'日（週'+w+'）' },
   ko: { lang:'한국어', title:'하카타 고바야시 침구·정골원　온라인 예약', tag:'LINE이 없는 분, 해외에서 오신 분을 위한 예약 양식입니다',
     line:'두 번째 방문 이후 일본 건강보험을 사용하시는 분은 <a id="lineA">LINE 예약</a>을 이용해 주세요.', tr:'저희 원은 일본어와 영어만 가능합니다. 원내에서는 휴대폰 번역 앱으로 소통하게 되는 점 양해 부탁드립니다.',
     s0:'일본 건강보험증을 가지고 계십니까?', yes:'있음', no:'없음(해외에서 오신 분 등)',
@@ -231,7 +231,7 @@ const msgOf = e => T[S.lang][e.message] || T[S.lang].E_BUSY;
 
 function render() {
   const L = S.lang, t = T[L];
-  document.documentElement.lang = L === 'zh' ? 'zh-CN' : L;
+  document.documentElement.lang = L === 'zh' ? 'zh-TW' : L;
   $('langs').innerHTML = '';
   LANGS.forEach(k => { const b = document.createElement('button'); b.textContent = T[k].lang; b.className = k === L ? 'on' : ''; b.onclick = () => { S.lang = k; render(); }; $('langs').appendChild(b); });
   const set = (id, v, html) => { $(id)[html ? 'innerHTML' : 'textContent'] = v; };
