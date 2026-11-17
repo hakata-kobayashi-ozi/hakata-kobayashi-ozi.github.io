@@ -143,9 +143,9 @@ const T = {
     line:'2回目以降で、日本の健康保険をお使いの方は <a id="lineA">LINE予約</a> をご利用ください。', tr:'',
     s0:'日本の健康保険証はお持ちですか？', yes:'持っている', no:'持っていない（海外の方など）',
     s1:'メニューを選ぶ', s2:'日にちと時間を選ぶ', s3:'お名前と連絡先',
-    insY:'', insN:'日本の健康保険をお持ちでない方は、ビジター料金になります。',
-    menus:{ shinki:['初めての方（新規）','問診・検査・施術'], standard:['スタンダード','自費の施術'], okibari:['おき鍼','小さな鍼を貼って帰ります'], honkaku:['本格鍼治療','しっかり鍼を使う施術'], visitor60:['ビジター 60分','日本の健康保険をお持ちでない方'], visitor90:['ビジター 90分','日本の健康保険をお持ちでない方'] },
-    min:m=>m+'分', range:'ご予約は翌日から1か月先までです。', pick:'日にちを選ぶと、空いている時間が出ます。', none:'この日は空きがありません。別の日をお選びください。', loading:'空き状況を確認しています…',
+    insY:'日本の健康保険をお使いの方は、どのメニューも保険と自費の併用になります。', insN:'日本の健康保険をお持ちでない方は、ビジター料金になります。',
+    menus:{ shinki:['初めての方（新規）','問診・検査・施術'], standard:['スタンダード','電気（約12分）＋マッサージ（30分弱）'], okibari:['おき鍼','短時間の鍼治療。電気の間に置鍼（約12分）＋マッサージ（約12分）'], honkaku:['本格鍼治療','しっかり鍼を使う施術'], visitor60:['ビジター 60分','日本の健康保険をお持ちでない方'], visitor90:['ビジター 90分','日本の健康保険をお持ちでない方'] },
+    min:(m,a)=>(a?'約':'')+m+'分', range:'ご予約は翌日から1か月先までです。', pick:'日にちを選ぶと、空いている時間が出ます。', none:'この日は空きがありません。別の日をお選びください。', loading:'空き状況を確認しています…',
     wd:'日月火水木金土', md:(m,d,w)=>m+'/'+d+'（'+w+'）',
     name:'お名前', req:'必須', mail:'メールアドレス', tel:'電話番号（あれば）',
     msg:'症状やご希望（任意）', agree:'入力した内容は、予約のご連絡のためだけに使います。',
@@ -160,9 +160,9 @@ const T = {
     line:'Returning patients using Japanese national health insurance: please book via <a id="lineA">LINE</a>.', tr:'',
     s0:'Do you have a Japanese health insurance card?', yes:'Yes', no:'No (e.g. visitors from overseas)',
     s1:'Choose a treatment', s2:'Choose a date and time', s3:'Your name and contact details',
-    insY:'', insN:'Guests without Japanese health insurance pay the visitor rate.',
-    menus:{ shinki:['First visit','Consultation, assessment and treatment'], standard:['Standard','Self-pay treatment'], okibari:['Okibari','Tiny press-tack needles you wear home'], honkaku:['Full acupuncture','Thorough acupuncture session'], visitor60:['Visitor 60 min','For guests without Japanese health insurance'], visitor90:['Visitor 90 min','For guests without Japanese health insurance'] },
-    min:m=>m+' min', range:'Bookings are available from tomorrow up to one month ahead.', pick:'Choose a date to see available times.', none:'No times are available on this day. Please choose another day.', loading:'Checking availability…',
+    insY:'With Japanese health insurance, every treatment combines insurance and self-pay.', insN:'Guests without Japanese health insurance pay the visitor rate.',
+    menus:{ shinki:['First visit','Consultation, assessment and treatment'], standard:['Standard','Electrotherapy (approx. 12 min) + massage (just under 30 min)'], okibari:['Okibari','Short acupuncture: needles retained during electrotherapy (approx. 12 min) + massage (approx. 12 min)'], honkaku:['Full acupuncture','Thorough acupuncture session'], visitor60:['Visitor 60 min','For guests without Japanese health insurance'], visitor90:['Visitor 90 min','For guests without Japanese health insurance'] },
+    min:(m,a)=>(a?'approx. ':'')+m+' min', range:'Bookings are available from tomorrow up to one month ahead.', pick:'Choose a date to see available times.', none:'No times are available on this day. Please choose another day.', loading:'Checking availability…',
     wd:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], md:(m,d,w)=>w+' '+m+'/'+d,
     name:'Full name', req:'Required', mail:'Email', tel:'Phone (optional)',
     msg:'Symptoms or requests (optional)', agree:'Your details are used only to contact you about this booking.',
@@ -177,9 +177,9 @@ const T = {
     line:'第二次以後來院、使用日本健康保險的顧客，請透過 <a id="lineA">LINE</a> 預約。', tr:'本院工作人員僅能使用日語和英語溝通。就診期間我們將使用手機翻譯軟體與您交流，敬請見諒。',
     s0:'您有日本的健康保險證嗎？', yes:'有', no:'沒有（海外顧客等）',
     s1:'選擇項目', s2:'選擇日期和時間', s3:'姓名和聯絡方式',
-    insY:'', insN:'沒有日本健康保險的顧客適用訪客價格。',
-    menus:{ shinki:['初次來院','問診·檢查·治療'], standard:['標準療程','自費治療'], okibari:['皮內針（撳針）','貼上小針後帶回'], honkaku:['正式針灸治療','充分使用針灸的治療'], visitor60:['訪客 60分鐘','適用於沒有日本健康保險的顧客'], visitor90:['訪客 90分鐘','適用於沒有日本健康保險的顧客'] },
-    min:m=>m+'分鐘', range:'可預約明天至一個月後的日期。', pick:'選擇日期後會顯示可預約的時間。', none:'這一天沒有空位，請選擇其他日期。', loading:'正在確認空位…',
+    insY:'使用日本健康保險的顧客，所有項目皆為保險與自費併用。', insN:'沒有日本健康保險的顧客適用訪客價格。',
+    menus:{ shinki:['初次來院','問診·檢查·治療'], standard:['標準療程','電療（約12分鐘）＋按摩（將近30分鐘）'], okibari:['留針治療（短時間針灸）','電療時留針（約12分鐘）＋按摩（約12分鐘）'], honkaku:['正式針灸治療','充分使用針灸的治療'], visitor60:['訪客 60分鐘','適用於沒有日本健康保險的顧客'], visitor90:['訪客 90分鐘','適用於沒有日本健康保險的顧客'] },
+    min:(m,a)=>(a?'約':'')+m+'分鐘', range:'可預約明天至一個月後的日期。', pick:'選擇日期後會顯示可預約的時間。', none:'這一天沒有空位，請選擇其他日期。', loading:'正在確認空位…',
     wd:'日一二三四五六', md:(m,d,w)=>m+'/'+d+'（週'+w+'）',
     name:'姓名', req:'必填', mail:'電子郵件', tel:'電話（選填）',
     msg:'症狀或要求（選填）', agree:'您填寫的資料僅用於聯絡預約事宜。',
@@ -194,9 +194,9 @@ const T = {
     line:'두 번째 방문 이후 일본 건강보험을 사용하시는 분은 <a id="lineA">LINE 예약</a>을 이용해 주세요.', tr:'저희 원은 일본어와 영어만 가능합니다. 원내에서는 휴대폰 번역 앱으로 소통하게 되는 점 양해 부탁드립니다.',
     s0:'일본 건강보험증을 가지고 계십니까?', yes:'있음', no:'없음(해외에서 오신 분 등)',
     s1:'메뉴 선택', s2:'날짜와 시간 선택', s3:'성함과 연락처',
-    insY:'', insN:'일본 건강보험이 없는 분은 비지터 요금이 적용됩니다.',
-    menus:{ shinki:['첫 방문','문진·검사·시술'], standard:['스탠다드','자비 시술'], okibari:['오키바리','작은 침을 붙인 채 귀가'], honkaku:['본격 침치료','침을 충분히 사용하는 시술'], visitor60:['비지터 60분','일본 건강보험이 없는 분'], visitor90:['비지터 90분','일본 건강보험이 없는 분'] },
-    min:m=>m+'분', range:'예약은 내일부터 한 달 후까지 가능합니다.', pick:'날짜를 선택하면 예약 가능한 시간이 표시됩니다.', none:'이 날은 빈 시간이 없습니다. 다른 날을 선택해 주세요.', loading:'빈 시간을 확인하고 있습니다…',
+    insY:'일본 건강보험을 사용하시는 분은 모든 메뉴가 보험과 자비 병용입니다.', insN:'일본 건강보험이 없는 분은 비지터 요금이 적용됩니다.',
+    menus:{ shinki:['첫 방문','문진·검사·시술'], standard:['스탠다드','전기치료(약 12분) + 마사지(30분 미만)'], okibari:['오키바리(단시간 침치료)','전기치료 중 유침(약 12분) + 마사지(약 12분)'], honkaku:['본격 침치료','침을 충분히 사용하는 시술'], visitor60:['비지터 60분','일본 건강보험이 없는 분'], visitor90:['비지터 90분','일본 건강보험이 없는 분'] },
+    min:(m,a)=>(a?'약 ':'')+m+'분', range:'예약은 내일부터 한 달 후까지 가능합니다.', pick:'날짜를 선택하면 예약 가능한 시간이 표시됩니다.', none:'이 날은 빈 시간이 없습니다. 다른 날을 선택해 주세요.', loading:'빈 시간을 확인하고 있습니다…',
     wd:'일월화수목금토', md:(m,d,w)=>m+'/'+d+'('+w+')',
     name:'성함', req:'필수', mail:'이메일', tel:'전화번호(선택)',
     msg:'증상이나 요청사항(선택)', agree:'입력하신 정보는 예약 연락에만 사용합니다.',
@@ -209,8 +209,11 @@ const T = {
     date:(m,d,w)=>m+'월 '+d+'일('+w+')' },
 };
 const LANGS = ['ja','en','zh','ko'];
+// 画面に出す施術時間（枠の長さと違うもの）。おき鍼は約30分の治療（ベッド管理のため枠は45分）
+const SHOW_MIN = { okibari: 30, standard: 45 };
 const nav = (navigator.language || 'ja').toLowerCase();
-const S = { lang: nav.startsWith('ja') ? 'ja' : nav.startsWith('zh') ? 'zh' : nav.startsWith('ko') ? 'ko' : 'en',
+const qLang = (new URLSearchParams(location.search).get('lang') || '').toLowerCase(); // ホームページの各言語ページから ?lang=en などで開く
+const S = { lang: LANGS.indexOf(qLang) >= 0 ? qLang : nav.startsWith('ja') ? 'ja' : nav.startsWith('zh') ? 'zh' : nav.startsWith('ko') ? 'ko' : 'en',
   data:null, ins:'', menu:'', date:'', time:'', times:null, timesFor:'' };
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
@@ -250,7 +253,7 @@ function render() {
   $('menus').innerHTML = '';
   (S.ins === 'no' ? S.data.visitor : S.data.insured).forEach(m => {
     const b = document.createElement('button'); b.className = 'menu' + (S.menu === m.id ? ' on' : '');
-    b.innerHTML = '<span>' + esc(t.menus[m.id][0]) + '<small>' + esc(t.menus[m.id][1]) + '</small></span><span class="min">' + esc(t.min(m.minutes)) + '</span>';
+    b.innerHTML = '<span>' + esc(t.menus[m.id][0]) + '<small>' + esc(t.menus[m.id][1]) + '</small></span><span class="min">' + esc(t.min(SHOW_MIN[m.id] || m.minutes, !!SHOW_MIN[m.id])) + '</span>';
     b.onclick = () => { S.menu = m.id; S.time = ''; S.times = null; render(); if (S.date) loadTimes(); };
     $('menus').appendChild(b);
   });
