@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>はかた小林鍼灸・整骨院 Web予約 / Online Booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap">
+<style>
+/* 1カラムの予約フォーム。上から順に選ぶ。落ち着いた藍緑と和紙っぽい生成りグレー */
+:root {
+  --bg:#f3f4f2; --card:#ffffff; --fg:#1f2a2a; --sub:#5d6b6a; --line:#d8dedc;
+  --accent:#1f6f6a; --accent-soft:#e3f0ee; --warn-bg:#fff6e0; --warn:#8a5a00; --demo:#3b3f8f; --demo-soft:#ecedfa; --err:#c0392b;
+  --font:"Noto Sans JP","Noto Sans SC","Noto Sans KR",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg:#141a1a; --card:#1d2525; --fg:#e6ecea; --sub:#9fb0ad; --line:#334140;
+  --accent:#5fc0b7; --accent-soft:#1f3634; --warn-bg:#3a2f14; --warn:#f0c46a; --demo:#a9adf5; --demo-soft:#25274a; color-scheme:dark } }
+:root[data-theme="dark"] {
+  --bg:#141a1a; --card:#1d2525; --fg:#e6ecea; --sub:#9fb0ad; --line:#334140;
+  --accent:#5fc0b7; --accent-soft:#1f3634; --warn-bg:#3a2f14; --warn:#f0c46a; --demo:#a9adf5; --demo-soft:#25274a; color-scheme:dark }
+* { box-sizing:border-box; }
+body { background:var(--bg); color:var(--fg); font-family:var(--font); font-size:16px; line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:12px 48px; }
+.wrap { max-width:540px; margin:0 auto; display:flex; flex-direction:column; gap:12px; }
+.demo { background:var(--demo-soft); border:1px dashed var(--demo); border-radius:10px; padding:10px 12px; font-size:13px; color:var(--demo); }
+.demo .btns { display:flex; gap:6px; margin-top:6px; }
+.demo button { flex:1; padding:8px; border-radius:8px; border:1px solid var(--demo); background:transparent; color:var(--demo); font:inherit; cursor:pointer; }
+.demo button.on { background:var(--demo); color:var(--card); font-weight:700; }
+header { display:flex; flex-direction:column; gap:8px; }
+header h1 { font-size:20px; margin:0; text-wrap:balance; }
+header .tag { font-size:13px; color:var(--sub); }
+.langs { display:flex; gap:6px; flex-wrap:wrap; }
+.langs button { padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--fg); font:inherit; font-size:14px; cursor:pointer; }
+.langs button.on { border-color:var(--accent); background:var(--accent); color:var(--card); }
+.notice { background:var(--warn-bg); color:var(--warn); border-radius:10px; padding:10px 12px; font-size:14px; }
+.notice a { color:inherit; font-weight:700; }
+section.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:10px; }
+.card h2 { font-size:15px; margin:0; display:flex; gap:8px; align-items:baseline; }
+.card h2 .n { color:var(--accent); font-variant-numeric:tabular-nums; }
+.menus { display:grid; gap:8px; }
+.menu { text-align:left; padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--fg); font:inherit; cursor:pointer; display:flex; justify-content:space-between; gap:10px; }
+.menu small { display:block; color:var(--sub); font-size:13px; }
+.menu .min { color:var(--sub); font-size:13px; white-space:nowrap; }
+.menu.on, .day.on, .time.on { border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent); }
+.days { display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; }
+.day { padding:8px 0; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font:inherit; font-size:13px; cursor:pointer; line-height:1.3; }
+.day b { display:block; font-size:16px; font-variant-numeric:tabular-nums; }
+.day:disabled { opacity:.35; cursor:default; }
+.times { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px; }
+.time { padding:10px 0; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font:inherit; font-variant-numeric:tabular-nums; cursor:pointer; }
+.hint { font-size:13px; color:var(--sub); margin:0; }
+label.f { display:flex; flex-direction:column; gap:4px; font-size:14px; }
+label.f span em { color:var(--accent); font-style:normal; font-size:12px; margin-left:6px; }
+input[type=text], input[type=email], input[type=tel], textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--fg); font:inherit; }
+textarea { min-height:72px; resize:vertical; }
+.radio { display:flex; gap:8px; flex-wrap:wrap; }
+.radio label { display:flex; gap:6px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-size:14px; }
+.chk { display:flex; gap:8px; align-items:flex-start; font-size:14px; }
+button.go { width:100%; padding:14px; border:0; border-radius:10px; background:var(--accent); color:var(--card); font:inherit; font-weight:700; font-size:16px; cursor:pointer; }
+button.go:disabled { opacity:.4; cursor:default; }
+button.back { width:100%; padding:12px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--fg); font:inherit; cursor:pointer; }
+dl.sum { display:grid; grid-template-columns:auto 1fr; gap:6px 12px; margin:0; font-size:15px; }
+dl.sum dt { color:var(--sub); } dl.sum dd { margin:0; min-width:0; overflow-wrap:anywhere; }
+.done h2 { font-size:18px; color:var(--accent); }
+.err { color:#c0392b; font-size:13px; margin:0; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  [hidden] { display:none !important; }
+  .hp { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+  .radio .menu { flex:1; min-width:140px; }
+  .days { grid-template-columns:repeat(4, minmax(0,1fr)); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="langs" id="langs"></div>
+    <h1 id="t_title"></h1>
+    <div class="tag" id="t_tag"></div>
+  </header>
+  <div class="notice" id="t_line"></div>
+  <div class="notice" id="t_tr" hidden></div>
+  <section class="card" id="loading">…</section>
+  <p class="err" id="fatal" hidden></p>
+
+  <div id="steps" hidden>
+    <section class="card">
+      <h2><span class="n">1</span><span id="t_s0"></span></h2>
+      <div class="radio" id="insBtns">
+        <button class="menu" data-v="yes" id="insYes"></button>
+        <button class="menu" data-v="no" id="insNo"></button>
+      </div>
+    </section>
+    <section class="card" id="menuBox" hidden style="margin-top:12px">
+      <h2><span class="n">2</span><span id="t_s1"></span></h2>
+      <div class="menus" id="menus"></div>
+      <p class="hint" id="t_ins"></p>
+    </section>
+    <section class="card" id="dateBox" hidden style="margin-top:12px">
+      <h2><span class="n">3</span><span id="t_s2"></span></h2>
+      <div class="days" id="days"></div>
+      <p class="hint" id="t_range"></p>
+      <div class="times" id="times"></div>
+      <p class="hint" id="timeMsg"></p>
+    </section>
+    <section class="card" id="infoBox" hidden style="margin-top:12px">
+      <h2><span class="n">4</span><span id="t_s3"></span></h2>
+      <label class="f"><span><span id="t_name"></span><em id="t_req1"></em></span><input type="text" id="name" autocomplete="name" maxlength="40"></label>
+      <label class="f"><span><span id="t_mail"></span><em id="t_req2"></em></span><input type="email" id="mail" autocomplete="email" inputmode="email" maxlength="100"></label>
+      <label class="f"><span id="t_tel"></span><input type="tel" id="tel" autocomplete="tel" maxlength="20"></label>
+      <label class="f"><span id="t_msg"></span><textarea id="msg" maxlength="300"></textarea></label>
+      <label class="hp" aria-hidden="true">Company<input type="text" id="hp" tabindex="-1" autocomplete="off"></label>
+      <label class="chk"><input type="checkbox" id="agree"> <span id="t_agree"></span></label>
+      <p class="err" id="err" hidden></p>
+      <button class="go" id="toConfirm"></button>
+    </section>
+  </div>
+
+  <section class="card" id="confirm" hidden>
+    <h2 id="t_conf"></h2>
+    <dl class="sum" id="sum"></dl>
+    <p class="hint" id="t_confnote"></p>
+    <p class="err" id="sendErr" hidden></p>
+    <button class="go" id="send"></button>
+    <button class="back" id="back"></button>
+  </section>
+
+  <section class="card done" id="done" hidden>
+    <h2 id="t_done"></h2>
+    <p id="t_donebody" style="margin:0"></p>
+    <dl class="sum" id="sum2"></dl>
+    <p class="hint" id="t_donenote"></p>
+  </section>
+</div>
+
+<script>
+// ===== 設定 =====
+const API_URL = 'https://script.google.com/macros/s/AKfycbyGzkfTSnRu0iEfwczK65xtFezPZoxPJe_SXurg5rV-9IotnWwi8qln5l5YNlTgtoCTyQ/exec'; // LINE予約と同じ
+const LINE_URL = 'https://liff.line.me/2012333764-OveSDkaM';
+
+const T = {
+  ja: { lang:'日本語', title:'はかた小林鍼灸・整骨院　Web予約', tag:'LINEをお持ちでない方・海外の方向けの予約フォームです',
+    line:'2回目以降で、日本の健康保険をお使いの方は <a id="lineA">LINE予約</a> をご利用ください。', tr:'',
+    s0:'日本の健康保険証はお持ちですか？', yes:'持っている', no:'持っていない（海外の方など）',
+    s1:'メニューを選ぶ', s2:'日にちと時間を選ぶ', s3:'お名前と連絡先',
+    insY:'', insN:'日本の健康保険をお持ちでない方は、ビジター料金になります。',
+    menus:{ shinki:['初めての方（新規）','問診・検査・施術'], standard:['スタンダード','自費の施術'], okibari:['おき鍼','小さな鍼を貼って帰ります'], honkaku:['本格鍼治療','しっかり鍼を使う施術'], visitor60:['ビジター 60分','日本の健康保険をお持ちでない方'], visitor90:['ビジター 90分','日本の健康保険をお持ちでない方'] },
+    min:m=>m+'分', range:'ご予約は翌日から1か月先までです。', pick:'日にちを選ぶと、空いている時間が出ます。', none:'この日は空きがありません。別の日をお選びください。', loading:'空き状況を確認しています…',
+    wd:'日月火水木金土', md:(m,d,w)=>m+'/'+d+'（'+w+'）',
+    name:'お名前', req:'必須', mail:'メールアドレス', tel:'電話番号（あれば）',
+    msg:'症状やご希望（任意）', agree:'入力した内容は、予約のご連絡のためだけに使います。',
+    next:'入力内容を確認する', errFill:'お名前とメールアドレスを入れて、チェックを付けてください。',
+    conf:'この内容で仮予約します', confnote:'まだ予約は確定していません。院で確認して、メールで確定のご連絡をします。', send:'仮予約を送る', sending:'送っています…', back:'戻って直す',
+    sMenu:'メニュー', sDate:'日時', sName:'お名前', sMail:'メール', sTel:'電話', sIns:'健康保険証', sMsg:'ご希望',
+    done:'仮予約を受け付けました', donebody:'院で確認のうえ、メールで確定のご連絡をします。確定のメールが届くまでは、予約は確定していません。',
+    donenote:'メールが届かない場合は、迷惑メールフォルダもご確認ください。',
+    E_TAKEN:'その時間はちょうど埋まってしまいました。別の時間をお選びください。', E_BUSY:'しばらく時間をおいてから、もう一度お試しください。', E_NET:'通信できませんでした。電波の良いところで、もう一度お試しください。',
+    date:(m,d,w)=>m+'月'+d+'日（'+w+'）' },
+  en: { lang:'English', title:'Hakata Kobayashi Acupuncture & Bone-setting Clinic — Online Booking', tag:'For visitors without LINE and guests from overseas',
+    line:'Returning patients using Japanese national health insurance: please book via <a id="lineA">LINE</a>.', tr:'',
+    s0:'Do you have a Japanese health insurance card?', yes:'Yes', no:'No (e.g. visitors from overseas)',
+    s1:'Choose a treatment', s2:'Choose a date and time', s3:'Your name and contact details',
+    insY:'', insN:'Guests without Japanese health insurance pay the visitor rate.',
+    menus:{ shinki:['First visit','Consultation, assessment and treatment'], standard:['Standard','Self-pay treatment'], okibari:['Okibari','Tiny press-tack needles you wear home'], honkaku:['Full acupuncture','Thorough acupuncture session'], visitor60:['Visitor 60 min','For guests without Japanese health insurance'], visitor90:['Visitor 90 min','For guests without Japanese health insurance'] },
+    min:m=>m+' min', range:'Bookings are available from tomorrow up to one month ahead.', pick:'Choose a date to see available times.', none:'No times are available on this day. Please choose another day.', loading:'Checking availability…',
+    wd:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], md:(m,d,w)=>w+' '+m+'/'+d,
+    name:'Full name', req:'Required', mail:'Email', tel:'Phone (optional)',
+    msg:'Symptoms or requests (optional)', agree:'Your details are used only to contact you about this booking.',
+    next:'Review booking', errFill:'Please enter your name and email, and tick the box.',
+    conf:'Request this booking', confnote:'This is not confirmed yet. The clinic will check and email you to confirm.', send:'Send booking request', sending:'Sending…', back:'Go back and edit',
+    sMenu:'Treatment', sDate:'Date & time', sName:'Name', sMail:'Email', sTel:'Phone', sIns:'Insurance card', sMsg:'Requests',
+    done:'Booking request received', donebody:'The clinic will check the schedule and email you to confirm. Your booking is not confirmed until you receive that email.',
+    donenote:'If no email arrives, please check your spam folder.',
+    E_TAKEN:'That time has just been taken. Please choose another time.', E_BUSY:'Please wait a little and try again.', E_NET:'Could not connect. Please try again where the signal is better.',
+    date:(m,d,w)=>w+', '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]+' '+d },
+  zh: { lang:'中文', title:'博多小林针灸·整骨院　网上预约', tag:'适用于没有LINE的顾客及海外顾客',
+    line:'第二次以后来院、使用日本健康保险的顾客，请通过 <a id="lineA">LINE</a> 预约。', tr:'本院工作人员只会说日语和英语。院内的交流将使用手机翻译软件，敬请谅解。',
+    s0:'您有日本的健康保险证吗？', yes:'有', no:'没有（海外顾客等）',
+    s1:'选择项目', s2:'选择日期和时间', s3:'姓名和联系方式',
+    insY:'', insN:'没有日本健康保险的顾客适用访客价格。',
+    menus:{ shinki:['初次来院','问诊·检查·治疗'], standard:['标准疗程','自费治疗'], okibari:['揿针（皮内针）','贴上小针后带回'], honkaku:['正式针灸治疗','充分使用针灸的治疗'], visitor60:['访客 60分钟','适用于没有日本健康保险的顾客'], visitor90:['访客 90分钟','适用于没有日本健康保险的顾客'] },
+    min:m=>m+'分钟', range:'可预约明天至一个月后的日期。', pick:'选择日期后会显示可预约的时间。', none:'这一天没有空位，请选择其他日期。', loading:'正在确认空位…',
+    wd:'日一二三四五六', md:(m,d,w)=>m+'/'+d+'（周'+w+'）',
+    name:'姓名', req:'必填', mail:'电子邮箱', tel:'电话（选填）',
+    msg:'症状或要求（选填）', agree:'您填写的信息仅用于联系预约事宜。',
+    next:'确认填写内容', errFill:'请填写姓名和邮箱，并勾选同意。',
+    conf:'按此内容提交预约申请', confnote:'预约尚未确定。院方确认后会通过邮件通知您。', send:'提交预约申请', sending:'正在发送…', back:'返回修改',
+    sMenu:'项目', sDate:'日期时间', sName:'姓名', sMail:'邮箱', sTel:'电话', sIns:'健康保险证', sMsg:'要求',
+    done:'已收到您的预约申请', donebody:'院方确认后会发送确认邮件。收到确认邮件之前，预约尚未确定。',
+    donenote:'如果没有收到邮件，请检查垃圾邮件文件夹。',
+    E_TAKEN:'该时间刚刚被预约，请选择其他时间。', E_BUSY:'请稍后再试。', E_NET:'无法连接，请在信号较好的地方重试。',
+    date:(m,d,w)=>m+'月'+d+'日（周'+w+'）' },
+  ko: { lang:'한국어', title:'하카타 고바야시 침구·정골원　온라인 예약', tag:'LINE이 없는 분, 해외에서 오신 분을 위한 예약 양식입니다',
+    line:'두 번째 방문 이후 일본 건강보험을 사용하시는 분은 <a id="lineA">LINE 예약</a>을 이용해 주세요.', tr:'저희 원은 일본어와 영어만 가능합니다. 원내에서는 휴대폰 번역 앱으로 소통하게 되는 점 양해 부탁드립니다.',
+    s0:'일본 건강보험증을 가지고 계십니까?', yes:'있음', no:'없음(해외에서 오신 분 등)',
+    s1:'메뉴 선택', s2:'날짜와 시간 선택', s3:'성함과 연락처',
+    insY:'', insN:'일본 건강보험이 없는 분은 비지터 요금이 적용됩니다.',
+    menus:{ shinki:['첫 방문','문진·검사·시술'], standard:['스탠다드','자비 시술'], okibari:['오키바리','작은 침을 붙인 채 귀가'], honkaku:['본격 침치료','침을 충분히 사용하는 시술'], visitor60:['비지터 60분','일본 건강보험이 없는 분'], visitor90:['비지터 90분','일본 건강보험이 없는 분'] },
+    min:m=>m+'분', range:'예약은 내일부터 한 달 후까지 가능합니다.', pick:'날짜를 선택하면 예약 가능한 시간이 표시됩니다.', none:'이 날은 빈 시간이 없습니다. 다른 날을 선택해 주세요.', loading:'빈 시간을 확인하고 있습니다…',
+    wd:'일월화수목금토', md:(m,d,w)=>m+'/'+d+'('+w+')',
+    name:'성함', req:'필수', mail:'이메일', tel:'전화번호(선택)',
+    msg:'증상이나 요청사항(선택)', agree:'입력하신 정보는 예약 연락에만 사용합니다.',
+    next:'입력 내용 확인', errFill:'성함과 이메일을 입력하고 체크해 주세요.',
+    conf:'이 내용으로 가예약합니다', confnote:'아직 예약이 확정되지 않았습니다. 원에서 확인 후 이메일로 확정 연락을 드립니다.', send:'가예약 보내기', sending:'보내는 중…', back:'돌아가서 수정',
+    sMenu:'메뉴', sDate:'일시', sName:'성함', sMail:'이메일', sTel:'전화', sIns:'건강보험증', sMsg:'요청사항',
+    done:'가예약이 접수되었습니다', donebody:'원에서 확인 후 이메일로 확정 연락을 드립니다. 확정 메일을 받기 전까지는 예약이 확정되지 않습니다.',
+    donenote:'메일이 오지 않으면 스팸 폴더도 확인해 주세요.',
+    E_TAKEN:'그 시간은 방금 마감되었습니다. 다른 시간을 선택해 주세요.', E_BUSY:'잠시 후 다시 시도해 주세요.', E_NET:'연결할 수 없습니다. 신호가 좋은 곳에서 다시 시도해 주세요.',
+    date:(m,d,w)=>m+'월 '+d+'일('+w+')' },
+};
+const LANGS = ['ja','en','zh','ko'];
+const nav = (navigator.language || 'ja').toLowerCase();
+const S = { lang: nav.startsWith('ja') ? 'ja' : nav.startsWith('zh') ? 'zh' : nav.startsWith('ko') ? 'ko' : 'en',
+  data:null, ins:'', menu:'', date:'', time:'', times:null, timesFor:'' };
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const parts = k => { const [y,m,d] = k.split('-').map(Number); return { m, d, w: new Date(Date.UTC(y, m-1, d)).getUTCDay() }; };
+const wdName = (L, w) => T[L].wd[w];
+
+async function api(action, data) {
+  let res, text;
+  try {
+    res = await fetch(API_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ action }, data || {})) });
+    text = await res.text();
+  } catch (e) { throw new Error('E_NET'); }
+  let j; try { j = JSON.parse(text); } catch (e) { throw new Error('E_BUSY'); }
+  if (!j.ok) throw new Error(j.error || 'E_BUSY');
+  return j;
+}
+const msgOf = e => T[S.lang][e.message] || T[S.lang].E_BUSY;
+
+function render() {
+  const L = S.lang, t = T[L];
+  document.documentElement.lang = L === 'zh' ? 'zh-CN' : L;
+  $('langs').innerHTML = '';
+  LANGS.forEach(k => { const b = document.createElement('button'); b.textContent = T[k].lang; b.className = k === L ? 'on' : ''; b.onclick = () => { S.lang = k; render(); }; $('langs').appendChild(b); });
+  const set = (id, v, html) => { $(id)[html ? 'innerHTML' : 'textContent'] = v; };
+  set('t_title', t.title); set('t_tag', t.tag); set('t_line', t.line, true); $('lineA').href = LINE_URL;
+  set('t_tr', t.tr); $('t_tr').hidden = !t.tr;
+  set('t_s0', t.s0); set('insYes', t.yes); set('insNo', t.no);
+  set('t_s1', t.s1); set('t_s2', t.s2); set('t_s3', t.s3); set('t_ins', S.ins === 'no' ? t.insN : t.insY); set('t_range', t.range);
+  set('t_name', t.name); set('t_req1', t.req); set('t_mail', t.mail); set('t_req2', t.req); set('t_tel', t.tel);
+  set('t_msg', t.msg); set('t_agree', t.agree);
+  set('toConfirm', t.next); set('t_conf', t.conf); set('t_confnote', t.confnote); set('send', t.send); set('back', t.back);
+  set('t_done', t.done); set('t_donebody', t.donebody); set('t_donenote', t.donenote);
+  ['insYes','insNo'].forEach(id => $(id).classList.toggle('on', $(id).dataset.v === S.ins));
+  if (!S.data) return;
+  // メニュー
+  $('menuBox').hidden = !S.ins;
+  $('menus').innerHTML = '';
+  (S.ins === 'no' ? S.data.visitor : S.data.insured).forEach(m => {
+    const b = document.createElement('button'); b.className = 'menu' + (S.menu === m.id ? ' on' : '');
+    b.innerHTML = '<span>' + esc(t.menus[m.id][0]) + '<small>' + esc(t.menus[m.id][1]) + '</small></span><span class="min">' + esc(t.min(m.minutes)) + '</span>';
+    b.onclick = () => { S.menu = m.id; S.time = ''; S.times = null; render(); if (S.date) loadTimes(); };
+    $('menus').appendChild(b);
+  });
+  // 日にち
+  $('dateBox').hidden = !S.menu;
+  $('days').innerHTML = '';
+  S.data.dates.forEach(k => {
+    const p = parts(k), b = document.createElement('button');
+    b.className = 'day' + (S.date === k ? ' on' : '');
+    b.innerHTML = esc(wdName(L, p.w)) + '<b>' + p.m + '/' + p.d + '</b>';
+    b.onclick = () => { S.date = k; S.time = ''; render(); loadTimes(); };
+    $('days').appendChild(b);
+  });
+  // 時間
+  $('times').innerHTML = '';
+  if (!S.date) $('timeMsg').textContent = t.pick;
+  else if (!S.times) $('timeMsg').textContent = t.loading;
+  else {
+    $('timeMsg').textContent = S.times.length ? '' : t.none;
+    S.times.forEach(s => { const b = document.createElement('button'); b.className = 'time' + (S.time === s ? ' on' : ''); b.textContent = s; b.onclick = () => { S.time = s; render(); }; $('times').appendChild(b); });
+  }
+  $('infoBox').hidden = !S.time;
+  if (!$('confirm').hidden) summary('sum');
+  if (!$('done').hidden) summary('sum2');
+  if (!$('err').hidden) $('err').textContent = t.errFill;
+}
+
+async function loadTimes() {
+  const key = S.date + '|' + S.menu; S.timesFor = key; S.times = null; render();
+  try {
+    const r = await api('webSlots', { date: S.date, menu: S.menu });
+    if (S.timesFor === key) { S.times = r.times; render(); }
+  } catch (e) { if (S.timesFor === key) { S.times = []; render(); $('timeMsg').textContent = msgOf(e); } }
+}
+
+function whenText(L) { const p = parts(S.date); return T[L].date(p.m, p.d, wdName(L, p.w)) + ' ' + S.time; }
+function summary(id) {
+  const L = S.lang, t = T[L];
+  const rows = [[t.sMenu, t.menus[S.menu][0]], [t.sDate, whenText(L)], [t.sName, $('name').value.trim()], [t.sMail, $('mail').value.trim()]];
+  if ($('tel').value.trim()) rows.push([t.sTel, $('tel').value.trim()]);
+  rows.push([t.sIns, S.ins === 'yes' ? t.yes : t.no]);
+  if ($('msg').value.trim()) rows.push([t.sMsg, $('msg').value.trim()]);
+  $(id).innerHTML = '';
+  rows.forEach(([k, v]) => { const dt = document.createElement('dt'); dt.textContent = k; const dd = document.createElement('dd'); dd.textContent = v; $(id).append(dt, dd); });
+}
+
+[...$('insBtns').children].forEach(b => b.onclick = () => { S.ins = b.dataset.v; S.menu = ''; S.date = ''; S.time = ''; S.times = null; render(); });
+$('toConfirm').onclick = () => {
+  const ok = S.menu && S.date && S.time && $('name').value.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('mail').value.trim()) && $('agree').checked;
+  $('err').hidden = !!ok; if (!ok) { $('err').textContent = T[S.lang].errFill; return; }
+  $('steps').hidden = true; $('confirm').hidden = false; $('sendErr').hidden = true; summary('sum'); window.scrollTo(0, 0);
+};
+$('back').onclick = () => { $('confirm').hidden = true; $('steps').hidden = false; };
+$('send').onclick = async () => {
+  const b = $('send'); b.disabled = true; b.textContent = T[S.lang].sending; $('sendErr').hidden = true;
+  try {
+    await api('webBook', { lang: S.lang, ins: S.ins, menu: S.menu, date: S.date, time: S.time,
+      name: $('name').value.trim(), mail: $('mail').value.trim(), tel: $('tel').value.trim(), msg: $('msg').value.trim(), hp: $('hp').value });
+    $('confirm').hidden = true; $('done').hidden = false; summary('sum2'); window.scrollTo(0, 0);
+  } catch (e) {
+    $('sendErr').textContent = msgOf(e); $('sendErr').hidden = false;
+    if (e.message === 'E_TAKEN') { S.time = ''; loadTimes(); $('back').click(); $('timeMsg').textContent = T[S.lang].E_TAKEN; }
+  } finally { b.disabled = false; b.textContent = T[S.lang].send; }
+};
+
+(async () => {
+  render();
+  try { S.data = await api('webInit'); $('loading').hidden = true; $('steps').hidden = false; render(); }
+  catch (e) { $('loading').hidden = true; $('fatal').textContent = msgOf(e); $('fatal').hidden = false; }
+})();
+</script>
+</body>
+</html>
