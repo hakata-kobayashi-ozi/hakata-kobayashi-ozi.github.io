@@ -311,7 +311,8 @@ $('send').onclick = async () => {
   const b = $('send'); b.disabled = true; b.textContent = T[S.lang].sending; $('sendErr').hidden = true;
   try {
     await api('webBook', { lang: S.lang, ins: S.ins, menu: S.menu, date: S.date, time: S.time,
-      name: $('name').value.trim(), mail: $('mail').value.trim(), tel: $('tel').value.trim(), msg: $('msg').value.trim(), hp: $('hp').value });
+      name: $('name').value.trim(), mail: $('mail').value.trim(), tel: $('tel').value.trim(), msg: $('msg').value.trim(), hp: $('hp').value,
+      src: (new URLSearchParams(location.search).get('src') || '').replace(/[^\w-]/g, '').slice(0, 20) });  // どこから来たか（?src=ig など）
     $('confirm').hidden = true; $('done').hidden = false; summary('sum2'); window.scrollTo(0, 0);
   } catch (e) {
     $('sendErr').textContent = msgOf(e); $('sendErr').hidden = false;
